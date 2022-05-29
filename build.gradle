@@ -25,18 +25,25 @@ repositories {
 dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-web:3.0.0-SNAPSHOT'
     implementation 'org.projectlombok:lombok:1.18.24'
+    // 以下を定義しておかないと、ビルド時に「エラー: シンボルを見つけられません」のエラーになる。
+    annotationProcessor 'org.projectlombok:lombok:1.18.24'
+
     runtimeOnly 'org.springframework.boot:spring-boot-devtools:3.0.0-SNAPSHOT'
     runtimeOnly 'mysql:mysql-connector-java:8.0.29'
     testImplementation 'org.springframework.boot:spring-boot-starter-test:3.0.0-SNAPSHOT'
 
     // https://mvnrepository.com/artifact/org.springframework.boot/spring-boot-starter-validation
     implementation group: 'org.springframework.boot', name: 'spring-boot-starter-validation', version: '2.7.0'
+
+    // https://mvnrepository.com/artifact/org.mybatis.spring.boot/mybatis-spring-boot-starter
+    implementation group: 'org.mybatis.spring.boot', name: 'mybatis-spring-boot-starter', version: '2.2.2'
+
 }
 
 group = 'com.books'
 version = '0.0.1-SNAPSHOT'
 description = 'app'
-java.sourceCompatibility = JavaVersion.VERSION_1_8
+java.sourceCompatibility = JavaVersion.VERSION_17
 
 publishing {
     publications {
