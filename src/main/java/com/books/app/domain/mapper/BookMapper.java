@@ -21,7 +21,7 @@ public interface BookMapper {
 	 * @param image 画像
 	 * @return 登録件数
 	 */
-	@Update("INSERT INTO tbl_book_list (title, author, category, summary, image, registed_date, updated_date) VALUES(#{title},  #{author}, #{category}, #{image}, '0', '0', now(), now())")
+	@Update("INSERT INTO tbl_book_list (title, author, category, summary, image, registed_date, updated_date) VALUES(#{title}, #{author}, #{category}, #{summary}, #{image}, now(), now())")
 	int registBook(@Param("title") String title, @Param("author") String author, @Param("category") String category,
 			@Param("summary") String summary, @Param("image") String image);
 }
