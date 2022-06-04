@@ -8,10 +8,20 @@
 <meta name="description" content="ここにサイト説明を入れます">
 <meta name="keywords" content="キーワード１,キーワード２,キーワード３,キーワード４,キーワード５">
 <link rel="stylesheet" href="css/style.css">
+<link rel="stylesheet" href="css/loading.css">
+<link rel="stylesheet" href="css/modal.css">
 <!--[if lt IE 9]>
 <script src="https://oss.maxcdn.com/html5shiv/3.7.2/html5shiv.min.js"></script>
 <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
 <![endif]-->
+<!-- vue.js -->
+<script src="https://cdn.jsdelivr.net/npm/vue@2.6.14/dist/vue.js"></script>
+<!-- axios -->
+<script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+<script src="js/jquery-3.6.0.min.js"></script>
+<script src="js/validate/validate.js"></script>
+<script src="js/modal.js" defer></script>
+<script src="js/registBook.js" defer></script>
 </head>
 
 <body>
@@ -32,80 +42,103 @@
 </ul>
 </nav>
 
-<div id="contents">
-
-<section>
-
-<h2>About</h2>
-<p>このサイトの説明ページです。</p>
-
-<h2>登録</h2>
-<table class="ta1">
-<caption>見出しが必要であればここを使います</caption>
-<tr>
-<th>タイトル</th>
-<td>ここに説明など入れて下さい。サンプルテキスト。</td>
-</tr>
-<tr>
-<th>著者</th>
-<td>ここに説明など入れて下さい。サンプルテキスト。</td>
-</tr>
-<tr>
-<th>分類</th>
-<!-- TODO:リストで選べるようにする -->
-<td>ここに説明など入れて下さい。サンプルテキスト。</td>
-</tr>
-<tr>
-<th>概要</th>
-<td>ここに説明など入れて下さい。サンプルテキスト。</td>
-</tr>
-<tr>
-<th>画像</th>
-<!-- 画像をアップロードできるようにする -->
-<td>ここに説明など入れて下さい。サンプルテキスト。</td>
-</tr>
-<tr>
-</table>
-
-</section>
-
-<section>
-
-    <h2>GALLERY</h2>
-    
-    <div class="list">
-    <img src="images/sample1.jpg">
-    <h4>見出しを入れます。</h4>
-    <p>説明を入れます。</p>
+<div id="app">
+    <div id="loading" v-if="loading">
+        <div class="spinner"></div>
     </div>
-    
-    <div class="list">
-    <img src="images/sample2.jpg">
-    <h4>ここの見出しの色は、cssフォルダのstyle.cssの「.list h4」で設定されているcolorのコードで変更できます。</h4>
-    <p>左の画像の幅もstyle.cssの「.list img」のwidthの数字で変更できます。</p>
-    </div>
-    
-    <div class="list">
-    <img src="images/sample3.jpg">
-    <h4>見出しを入れます。</h4>
-    <p>説明を入れます。</p>
-    </div>
-    
-    <div class="list">
-    <img src="images/sample4.jpg">
-    <h4>見出しを入れます。</h4>
-    <p>説明を入れます。</p>
-    </div>
-    
-    <div class="list">
-    <img src="images/sample5.jpg">
-    <h4>見出しを入れます。</h4>
-    <p>説明を入れます。</p>
-    </div>
-    
+    <div id="contents" v-else>
+
+    <section>
+
+    <h2>About</h2>
+    <p>このサイトの説明ページです。</p>
+
+    <h2>登録</h2>
+    <table class="ta1">
+    <caption>見出しが必要であればここを使います</caption>
+    <tr>
+    <th>タイトル</th>
+    <td><input type="text" name="title" value="" size="100" @blur="inputTitle"></td>
+    </tr>
+    <tr>
+    <th>著者</th>
+    <td><input type="text" name="author" value="" size="100" @blur="inputAuthor"></td>
+    </tr>
+    <tr>
+    <th>分類</th>
+    <!-- TODO:リストで選べるようにする -->
+    <td><input type="text" name="category" value="" size="24" @blur="inputCategory"></td>
+    </tr>
+    <tr>
+    <th>概要</th>
+    <td><textarea name="summary" cols="100" rows="5" @blur="inputSummary"></textarea></td>
+    </tr>
+    <tr>
+    <th>画像</th>
+    <!-- 画像をアップロードできるようにする -->
+    <td>
+        【TODO】
+        <!-- <td><input type="text" name="image" value="" size="500" @blur="inputImage"></td> -->
+    </td>
+    </tr>
+    <tr>
+    </table>
+    <input v-if="!buttonActive" type="submit" value="登録" disabled>
+    <input v-else type="submit" value="登録" @click="registTask">
+
     </section>
-</section>
 
+    <section>
+
+        <h2>GALLERY</h2>
+        
+        <div class="list">
+        <img src="images/sample1.jpg">
+        <h4>見出しを入れます。</h4>
+        <p>説明を入れます。</p>
+        </div>
+        
+        <div class="list">
+        <img src="images/sample2.jpg">
+        <h4>ここの見出しの色は、cssフォルダのstyle.cssの「.list h4」で設定されているcolorのコードで変更できます。</h4>
+        <p>左の画像の幅もstyle.cssの「.list img」のwidthの数字で変更できます。</p>
+        </div>
+        
+        <div class="list">
+        <img src="images/sample3.jpg">
+        <h4>見出しを入れます。</h4>
+        <p>説明を入れます。</p>
+        </div>
+        
+        <div class="list">
+        <img src="images/sample4.jpg">
+        <h4>見出しを入れます。</h4>
+        <p>説明を入れます。</p>
+        </div>
+        
+        <div class="list">
+        <img src="images/sample5.jpg">
+        <h4>見出しを入れます。</h4>
+        <p>説明を入れます。</p>
+        </div>
+        
+        </section>
+    </section>
+
+    </div>
+</div>
+<div id="modal">
+    <div id="easyModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h1>エラー内容</h1>
+                <span class="modalClose" @click="modalClose">×</span>
+            </div>
+            <div class="modal-body" v-for="message in messages">
+                <ui>{{message}}</ui>
+            </div>
+        </div>
+    </div>
 </div>
 <!--/contents-->
 
