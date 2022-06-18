@@ -5,8 +5,8 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <title>books</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="description" content="ここにサイト説明を入れます">
-<meta name="keywords" content="キーワード１,キーワード２,キーワード３,キーワード４,キーワード５">
+<meta name="description" content="書籍を登録する画面">
+<meta name="keywords" content="本、書籍、お試し、ポートフォリオ、登録">
 <link rel="stylesheet" href="css/style.css">
 <link rel="stylesheet" href="css/loading.css">
 <link rel="stylesheet" href="css/modal.css">
@@ -35,10 +35,13 @@
 <nav id="menubar">
 <ul>
 <li><a href="index.html">Home</a></li>
-<li><a href="about.html">About</a></li>
-<li><a href="register.html">register</a></li>
-<li><a href="gallery.html">Gallery</a></li>
-<li><a href="link.html">Link</a></li>
+<!-- TODO about.htmlへの導線にする -->
+<li><a href="register.html">About</a></li>
+<li><a href="register.html">Register</a></li>
+<!-- TODO gallery.htmlへの導線にする -->
+<li><a href="register.html">Gallery</a></li>
+<!-- TODO link.htmlへの導線にする -->
+<li><a href="register.html">Link</a></li>
 </ul>
 </nav>
 
@@ -50,12 +53,11 @@
 
     <section>
 
-    <h2>About</h2>
+<!--     <h2>About</h2>
     <p>このサイトの説明ページです。</p>
-
+ -->
     <h2>登録</h2>
     <table class="ta1">
-    <caption>見出しが必要であればここを使います</caption>
     <tr>
     <th>タイトル</th>
     <td><input type="text" name="title" value="" size="100" @blur="inputTitle"></td>
@@ -87,46 +89,9 @@
     <input v-else type="submit" value="登録" @click="registTask">
 
     </section>
-
-    <section>
-
-        <h2>GALLERY</h2>
-        
-        <div class="list">
-        <img src="images/sample1.jpg">
-        <h4>見出しを入れます。</h4>
-        <p>説明を入れます。</p>
-        </div>
-        
-        <div class="list">
-        <img src="images/sample2.jpg">
-        <h4>ここの見出しの色は、cssフォルダのstyle.cssの「.list h4」で設定されているcolorのコードで変更できます。</h4>
-        <p>左の画像の幅もstyle.cssの「.list img」のwidthの数字で変更できます。</p>
-        </div>
-        
-        <div class="list">
-        <img src="images/sample3.jpg">
-        <h4>見出しを入れます。</h4>
-        <p>説明を入れます。</p>
-        </div>
-        
-        <div class="list">
-        <img src="images/sample4.jpg">
-        <h4>見出しを入れます。</h4>
-        <p>説明を入れます。</p>
-        </div>
-        
-        <div class="list">
-        <img src="images/sample5.jpg">
-        <h4>見出しを入れます。</h4>
-        <p>説明を入れます。</p>
-        </div>
-        
-        </section>
-    </section>
-
-    </div>
+	</div>
 </div>
+
 <div id="modal">
     <div id="easyModal" class="modal">
         <div class="modal-content">

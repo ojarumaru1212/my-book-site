@@ -148,6 +148,13 @@ footer {
 	clear: both;
 	text-align: center;	/*文字をセンタリング*/
 	padding: 30px 0px 10px;	/*上、左右、下へのボックス内の余白*/
+	
+	/* コピーライトをページ下部に固定 */
+	position: absolute;
+	bottom: 0;
+	left: 0;
+	width: 100%;
+	height: 30px;
 }
 footer a {
 	text-decoration: none;
