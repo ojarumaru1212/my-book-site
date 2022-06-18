@@ -20,3 +20,16 @@ services:
       TZ: Asia/Tokyo
     ports:
       - "3306:3306"
+  httpd:
+    container_name: httpd-container
+    build: ./web_app/apache
+    ports:
+      - "80:80"
+    stdin_open: true
+    # 権限の有効化
+    privileged: true
+  tomcat1:
+    container_name: tomcat-container1
+    build: ./web_app/tomcat
+    expose:
+      - "8009"
