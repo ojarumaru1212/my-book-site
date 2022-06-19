@@ -18,14 +18,17 @@ my-book-site
 | HTML       | ー           | ー           | ー                |
 | CSS        | ー           | ー           | ー                |
 | JavaScript | ー           | JQuery 3.6.0 | Vue 2.6.14        |
-| Java       | 17           | ー           | Spring Boot 2.7.0 |
+| Java       | 1.8           | ー           | Spring Boot 2.7.0 |
 
 - DB<br>
 MySQL 8.0.29
 
 - ツール等<br>
 Docker 20.10.11
-※MySQLコンテナを起動している。
+※Apache、Tomcat、MySQLコンテナを起動している。
+
+- ビルドツール<br>
+Gradle 7.1.1
 
 ## Usage
 - MySQLコンテナの起動方法
