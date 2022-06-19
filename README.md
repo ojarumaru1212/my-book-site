@@ -24,7 +24,7 @@ my-book-site
 MySQL 8.0.29
 
 - ツール等<br>
-Docker 20.10.11
+Docker 20.10.11<br>
 ※Apache、Tomcat、MySQLコンテナを起動している。
 
 - ビルドツール<br>
