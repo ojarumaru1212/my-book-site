@@ -12,5 +12,7 @@ COPY gallery.html /var/www/html/gallery.html
 COPY index.html /var/www/html/index.html
 COPY link.html /var/www/html/link.html
 COPY register.html /var/www/html/register.html
-# /sbin/initから起動する
-CMD ["/usr/sbin/init"]
+# dockerrun時に指定するコマンド
+# serviceコマンドを使用すると、バックグラウンドで実行した後、serviceコマンド自体は終了する為コンテナも終了してしまう。
+# そのため、httpdデーモンをフォアグラウンドで起動させる。
+ENTRYPOINT ["/usr/sbin/httpd","-DFOREGROUND"]

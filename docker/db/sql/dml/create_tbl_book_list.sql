@@ -1,3 +1,5 @@
+USE BOOK_DB;
+
 CREATE TABLE `tbl_book_list` (
     `book_no` bigint NOT NULL AUTO_INCREMENT UNIQUE COMMENT "連番",
     `title` char(255) NOT NULL COMMENT "タイトル",
