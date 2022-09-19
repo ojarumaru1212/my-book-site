@@ -28,6 +28,9 @@ Docker 20.10.11<br>
 Apache<br>
 Tomcat<br>
 
+- ビルドツール<br>
+Gradle 7.1.1
+
 ## Usage
 ### ■gradleビルド方法<br>
 ./app配下で以下を実行
