@@ -1,5 +1,5 @@
 ##################################################
-# ECRにpushする用のdocker-compose
+# ローカル用のdocker-compose
 #
 # ■コンテナ起動コマンド
 # docker-compose -f docker-compose_dev.yml up -d
