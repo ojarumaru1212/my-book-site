@@ -1,0 +1,46 @@
+##################################################
+# ECRにpushする用のdocker-compose
+#
+# ■コンテナ起動コマンド
+# docker-compose -f docker-compose_dev.yml up -d
+#
+# ■起動したコンテナに入るコマンド
+# docker exec -it [コンテナ名/コンテナID] /bin/bash
+#
+# ■DBに入るコマンド
+# mysql -u root -p
+# enter押下後、rootのパスワードを入力
+##################################################
+
+version: '2'
+services:
+  db:
+    build: 
+      # Dockerfileのビルド時の起点を設定
+      context: .
+      dockerfile: ./docker4dev/db/Dockerfile
+    environment:
+      MYSQL_ROOT_PASSWORD: password
+      MYSQL_DATABASE: BOOK_DB
+      TZ: Asia/Tokyo
+    ports:
+      - "3306:3306"
+  httpd:
+    container_name: httpd-container
+    build: 
+      # Dockerfileのビルド時の起点を設定
+      context: .
+      dockerfile: ./docker4dev/web_app/apache/Dockerfile
+    ports:
+      - "80:80"
+    stdin_open: true
+    # 権限の有効化
+    privileged: true
+  tomcat1:
+    container_name: tomcat-container1
+    build: 
+      # Dockerfileのビルド時の起点を設定
+      context: .
+      dockerfile: ./docker4dev/web_app/tomcat/Dockerfile
+    expose:
+      - "8009"
