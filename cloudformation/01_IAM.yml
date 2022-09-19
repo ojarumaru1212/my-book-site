@@ -1,0 +1,46 @@
+# バージョン指定（固定）
+AWSTemplateFormatVersion: 2010-09-09
+# テンプレートを説明する文字列（必須（必ずAWSTemplateFormatVersion直下に記載する））
+Description: Create IAM
+
+Resources:
+  AdminUserGroup:
+    Type: AWS::IAM::Group
+    Properties:
+      GroupName: "test-group"
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/AdministratorAccess
+        - arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryFullAccess
+        - arn:aws:iam::aws:policy/AmazonECS_FullAccess
+        # - arn:aws:iam::aws:policy/ElasticLoadBalancingFullAccess
+        - arn:aws:iam::aws:policy/service-role/AWSAppRunnerServicePolicyForECRAccess
+        - arn:aws:iam::aws:policy/AWSCloudFormationFullAccess
+
+  AdminUser:
+    Type: AWS::IAM::User
+    Properties:
+      UserName: "test-user"
+      Groups:
+        - !Ref AdminUserGroup
+      LoginProfile:
+        Password: "!Ab12345678"
+        PasswordResetRequired: false
+
+  IAMUser1AccessKey:
+    Type: AWS::IAM::AccessKey
+    Properties:
+      UserName: !Ref AdminUser
+
+  IAMUser1AccessKeySecret:
+    Type: AWS::SecretsManager::Secret
+    Properties:
+      Name: !Sub ${AdminUser}-credentials
+      SecretString: !Sub "{\"accessKeyId\":\"${IAMUser1AccessKey}\",\"secretAccessKey\":\"${IAMUser1AccessKey.SecretAccessKey}\"}"
+
+# Outputs:
+#   UserName:
+#     Description: UserName
+#     Value: !Join [",", [!Ref AdminUserName, !Ref PowerUserName, !Ref OpeUserName]]
+#   LoginURL:
+#     Description: LoginURL
+#     Value: !Join ["", ["https://", !Ref AWS::AccountId, ".signin.aws.amazon.com/console"]]
