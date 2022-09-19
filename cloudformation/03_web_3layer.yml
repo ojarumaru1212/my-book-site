@@ -1,0 +1,811 @@
+# バージョン指定（固定）
+AWSTemplateFormatVersion: 2010-09-09
+# テンプレートを説明する文字列（必須（必ずAWSTemplateFormatVersion直下に記載する））
+Description: Create WEB 3-layer structure
+
+Parameters:
+  DesiredCapacity:
+    Type: Number
+    Default: '1'
+    Description: Number of instances to launch in your ECS cluster.
+
+  MaxSize:
+    Type: Number
+    Default: '1'
+    Description: Maximum number of instances that can be launched in your ECS cluster.
+
+  Ec2ImageId:
+    Type: AWS::SSM::Parameter::Value<String>
+    Default: /aws/service/ami-amazon-linux-latest/amzn2-ami-hvm-x86_64-gp2
+
+###############################################
+# 作成するリソースを定義
+###############################################
+Resources:
+  # VPCの作成
+  # VPCのリソース名
+  myVPC:
+    Type: 'AWS::EC2::VPC'
+    Properties: 
+      CidrBlock: 172.16.0.0/20
+      Tags:
+      - Key: stack
+        Value: production
+
+  ##############################
+  # IGW
+  ##############################
+  # 作成
+  myInternetGateway:
+    Type: AWS::EC2::InternetGateway
+    Properties:
+      Tags:
+      - Key: stack
+        Value: production
+
+  # アタッチ
+  attachGateway:
+    Type: AWS::EC2::VPCGatewayAttachment
+    Properties:
+      VpcId: !Ref myVPC
+      InternetGatewayId: !Ref myInternetGateway
+
+  ##############################
+  # サブネット①の作成
+  # （WEBサーバが配置される）
+  ##############################
+  mySubnetWeb:
+    Type: AWS::EC2::Subnet
+    Properties:
+      # このサブネットを作成するVPCのIDを組み込み関数で指定
+      VpcId: !Ref myVPC
+      CidrBlock: 172.16.1.0/24
+      AvailabilityZone: "ap-northeast-1a"
+      Tags:
+      - Key: stack
+        Value: production
+
+  mySubnetWeb2:
+    Type: AWS::EC2::Subnet
+    Properties:
+      # このサブネットを作成するVPCのIDを組み込み関数で指定
+      VpcId: !Ref myVPC
+      CidrBlock: 172.16.4.0/24
+      AvailabilityZone: "ap-northeast-1c"
+      Tags:
+      - Key: stack
+        Value: production
+
+  ##############################
+  # サブネット②の作成
+  # （踏み台サーバが配置される）
+  ##############################
+  mySubnetStep:
+    Type: AWS::EC2::Subnet
+    Properties:
+      # このサブネットを作成するVPCのIDを組み込み関数で指定
+      VpcId: !Ref myVPC
+      CidrBlock: 172.16.2.0/24
+      AvailabilityZone: "ap-northeast-1a"
+      Tags:
+      - Key: stack
+        Value: production
+
+  ##############################
+  # サブネット③の作成
+  # （APP/DBサーバが配置される）
+  ##############################
+  mySubnetAppAndDb:
+    Type: AWS::EC2::Subnet
+    Properties:
+      # このサブネットを作成するVPCのIDを組み込み関数で指定
+      VpcId: !Ref myVPC
+      CidrBlock: 172.16.3.0/24
+      AvailabilityZone: "ap-northeast-1a"
+      Tags:
+      - Key: stack
+        Value: production
+
+  ##############################
+  # ルートテーブル①
+  # （サブネット①用）
+  ##############################
+  # 作成
+  # ※デフォルトで、VPCのIPアドレス→localhostへのルートが定義されている。
+  myRouteTableWeb:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref myVPC
+      Tags:
+      - Key: stack
+        Value: production
+
+  # ルーティング
+  myCarrierRouteWeb:
+    Type: AWS::EC2::Route
+    # 下記が作成されるまで、本リソースの作成を行わないようにする処理。（エラーがでるため、一旦コメントアウト）
+    # DependsOn: !Ref myInternetGateway
+    # パブリックサブネットのため、IGWへのルートを定義する。
+    Properties:
+        RouteTableId: !Ref myRouteTableWeb
+        DestinationCidrBlock: 0.0.0.0/0
+        GatewayId: !Ref myInternetGateway
+
+  # サブネットに関連付け
+  mySubnetRouteTableAssociationWeb:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref mySubnetWeb
+      RouteTableId: !Ref myRouteTableWeb
+
+  ##############################
+  # ルートテーブル②
+  # （サブネット②用）
+  ##############################
+  # 作成
+  myRouteTableStep:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref myVPC
+      Tags:
+      - Key: stack
+        Value: production
+
+  # ルーティング
+  myCarrierRouteStep:
+    Type: AWS::EC2::Route
+    # DependsOn: GatewayToInternet
+    Properties:
+        RouteTableId: !Ref myRouteTableStep
+        DestinationCidrBlock: 0.0.0.0/0
+        GatewayId: !Ref myInternetGateway
+
+  # サブネットに関連付け
+  mySubnetRouteTableAssociationStep:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref mySubnetStep
+      RouteTableId: !Ref myRouteTableStep
+
+  ##############################
+  # ルートテーブル③
+  # （サブネット③用）
+  ##############################
+  # 作成
+  myRouteTableAppAndDb:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref myVPC
+      Tags:
+      - Key: stack
+        Value: production
+
+  # ルーティング
+  myCarrierRouteAppAndDb:
+    Type: AWS::EC2::Route
+    # DependsOn: GatewayToInternet
+    Properties:
+        RouteTableId: !Ref myRouteTableAppAndDb
+        DestinationCidrBlock: 0.0.0.0/0
+        GatewayId: !Ref myInternetGateway
+
+  # サブネットに関連付け
+  mySubnetRouteTableAssociationAppAndDb:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref mySubnetAppAndDb
+      RouteTableId: !Ref myRouteTableAppAndDb
+
+  ##############################
+  # セキュリティグループ①の作成
+  # （WEBサーバ用）
+  ##############################
+  # セキュリティグループは、デフォルトで全通信を拒否している。
+  # そのため、許可する通信を設定する必要がある。
+  SGPingWeb:
+    Type: AWS::EC2::SecurityGroup
+    # DependsOn: VPC
+    Properties:
+      GroupDescription: SG to Web Server
+      VpcId: !Ref myVPC
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 22
+          ToPort: 22
+          CidrIp: 172.16.2.0/24
+        - IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          CidrIp: 0.0.0.0/0
+        # 暫定的に追加（TODO：APP/WEBサーバと、DBサーバを切り分けた際に削除する）
+        - IpProtocol: tcp
+          FromPort: 3306
+          ToPort: 3306
+          CidrIp: 0.0.0.0/0
+        # 必要？
+        - IpProtocol: tcp
+          FromPort: 8009
+          ToPort: 8009
+          CidrIp: 0.0.0.0/0
+      Tags:
+      - Key: stack
+        Value: production
+
+  ##############################
+  # セキュリティグループ②の作成
+  # （踏み台サーバ用）
+  ##############################
+  SGPingStep:
+    Type: AWS::EC2::SecurityGroup
+    # DependsOn: VPC
+    Properties:
+      GroupDescription: SG to Step Server
+      VpcId: !Ref myVPC
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 22
+          ToPort: 22
+          CidrIp: 0.0.0.0/0
+      Tags:
+      - Key: stack
+        Value: production
+
+  ##############################
+  # セキュリティグループ③の作成
+  # （APPサーバ用）
+  ##############################
+  SGPingApp:
+    Type: AWS::EC2::SecurityGroup
+    # DependsOn: VPC
+    Properties:
+      GroupDescription: SG to App Server
+      VpcId: !Ref myVPC
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 22
+          ToPort: 22
+          CidrIp: 172.16.2.0/24
+        - IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          CidrIp: 172.16.1.0/24
+      Tags:
+      - Key: stack
+        Value: production
+
+  ##############################
+  # セキュリティグループ④の作成
+  # （DBサーバ用）
+  ##############################
+  SGPingDb:
+    Type: AWS::EC2::SecurityGroup
+    # DependsOn: VPC
+    Properties:
+      GroupDescription: SG to DB Server
+      VpcId: !Ref myVPC
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 22
+          ToPort: 22
+          CidrIp: 172.16.2.0/24
+        - IpProtocol: tcp
+          FromPort: 3306
+          ToPort: 3306
+          # CidrIp: 172.16.1.0/24
+          CidrIp: 0.0.0.0/0
+        - IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          CidrIp: 0.0.0.0/0
+      Tags:
+      - Key: stack
+        Value: production
+
+  ##############################
+  # EC2インスタンス用のSSHキーを作成
+  # （WEBサーバ用）
+  ##############################
+  NewKeyPair:
+    Type: 'AWS::EC2::KeyPair'
+    Properties:
+      KeyName: MyKeyPair
+  ##############################
+  # EC2インスタンス①の作成
+  # （WEBサーバ用）
+  ##############################
+  # Ec2InstanceWeb:
+  #     Type: AWS::EC2::Instance
+  #     Properties:
+  #         ImageId: ami-02c3627b04781eada
+  #         # 事前に作成したキーペアのキー名を指定
+  #         KeyName: !Ref NewKeyPair
+  #         InstanceType: t2.micro
+  #         NetworkInterfaces: 
+  #           - AssociatePublicIpAddress: "true"
+  #             DeviceIndex: "0"
+  #             GroupSet: 
+  #               - Ref: "SGPingWeb"
+  #             SubnetId: 
+  #               Ref: "mySubnetWeb"
+
+  ##############################
+  # EC2インスタンス②の作成
+  # （踏み台サーバ用）
+  ##############################
+  Ec2InstanceStep:
+      Type: AWS::EC2::Instance
+      Properties:
+          ImageId: ami-02c3627b04781eada
+          # 事前に作成したキーペアのキー名を指定
+          KeyName: !Ref NewKeyPair
+          InstanceType: t2.micro
+          NetworkInterfaces: 
+            # 外部とSSH接続するため、PublicIPが必要
+            - AssociatePublicIpAddress: "true"
+              DeviceIndex: "0"
+              GroupSet: 
+                - Ref: "SGPingStep"
+              SubnetId: 
+                Ref: "mySubnetStep"
+  
+  ##############################
+  # EC2インスタンス③の作成
+  # （APPサーバ用）
+  ##############################
+  # Ec2InstanceApp:
+  #     Type: AWS::EC2::Instance
+  #     Properties:
+  #         ImageId: ami-02c3627b04781eada
+  #         # 事前に作成したキーペアのキー名を指定
+  #         KeyName: !Ref NewKeyPair
+  #         InstanceType: t2.micro
+  #         NetworkInterfaces: 
+  #           - AssociatePublicIpAddress: "false"
+  #             DeviceIndex: "0"
+  #             GroupSet: 
+  #               - Ref: "SGPingApp"
+  #             SubnetId: 
+  #               Ref: "mySubnetAppAndDb"
+  
+  ##############################
+  # EC2インスタンス④の作成
+  # （DBサーバ用）
+  ##############################
+  # Ec2InstanceDb:
+  #   Type: AWS::EC2::Instance
+  #   Properties:
+  #       ImageId: ami-02c3627b04781eada
+  #       # 事前に作成したキーペアのキー名を指定
+  #       KeyName: !Ref NewKeyPair
+  #       InstanceType: t2.micro
+  #       NetworkInterfaces: 
+  #         - AssociatePublicIpAddress: "false"
+  #           DeviceIndex: "0"
+  #           GroupSet: 
+  #             - Ref: "SGPingDb"
+  #           SubnetId: 
+  #             Ref: "mySubnetAppAndDb"
+
+  TargetGroup: 
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    Properties: 
+      VpcId: !Ref myVPC
+      Name: testTarget
+      Protocol: HTTP
+      Port: 80
+      HealthCheckProtocol: HTTP
+      HealthCheckPath: /
+      HealthCheckPort: traffic-port
+      HealthyThresholdCount: 5
+      UnhealthyThresholdCount: 2
+      HealthCheckTimeoutSeconds: 5
+      HealthCheckIntervalSeconds: 30
+      Matcher: 
+        HttpCode: 200
+      # Targets: 
+      #   - Id: !Ref EC2Instance
+      #     Port: 80
+
+  InternetALB: 
+    Type: AWS::ElasticLoadBalancingV2::LoadBalancer
+    Properties: 
+      Name: testLoadBalancer
+      Scheme: internet-facing
+      LoadBalancerAttributes: 
+        - Key: deletion_protection.enabled
+          Value: false
+        - Key: idle_timeout.timeout_seconds
+          Value: 4000
+      SecurityGroups:
+        - !Ref SGPingWeb
+      Subnets: 
+        - !Ref mySubnetWeb
+        - !Ref mySubnetWeb2
+
+  ALBListenerHTTP: 
+    Type: AWS::ElasticLoadBalancingV2::Listener
+    Properties: 
+      Port: 80
+      Protocol: HTTP
+      DefaultActions: 
+        - TargetGroupArn: !Ref TargetGroup
+          Type: forward
+      LoadBalancerArn: !Ref InternetALB
+
+  TaskRole1:
+    Type: AWS::IAM::Role
+    Properties:
+    #   RoleName: !Sub testTaskRole1
+    #   Path: /
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: ecs-tasks.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AmazonEC2ContainerServiceforEC2Role
+
+  Cluster:
+    Type: AWS::ECS::Cluster
+    Properties:
+      ClusterName: testCluster
+
+  FargateTaskExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - ecs-tasks.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy
+
+  # TaskDefinition1:
+  #   Type: AWS::ECS::TaskDefinition
+  #   Properties:
+  #     RequiresCompatibilities:
+  #       - EC2
+  #     Cpu: 256
+  #     Memory: 512
+  #     NetworkMode: none
+  #     ExecutionRoleArn: !Ref FargateTaskExecutionRole
+  #     TaskRoleArn: !Ref TaskRole1
+  #     ContainerDefinitions:
+  #       - Name: db
+  #         Image: !Sub "${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/test:latest"
+  
+  TaskDefinition2:
+    Type: AWS::ECS::TaskDefinition
+    Properties:
+      RequiresCompatibilities:
+        - EC2
+      Cpu: 1024 
+      Memory: 1024
+      # NetworkMode: none
+      # noneだとPortの設定ができないため、hostを設定（awsvpcだとパブリックIPを付与できない）
+      NetworkMode: bridge
+      ExecutionRoleArn: !Ref FargateTaskExecutionRole
+      TaskRoleArn: !Ref TaskRole1
+      ContainerDefinitions:
+        - Name: httpd
+          links: ["tomcat1"]
+          Image: !Sub "${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/apache:latest"
+          # ホストとコンテナのポートをマッピング
+          PortMappings: 
+            - ContainerPort: 80
+              HostPort: 80
+        - Name: tomcat1
+          links: ["db"]
+          Image: !Sub "${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/tomcat:latest"
+        - Name: db
+          Image: !Sub "${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/test:latest"
+          # ホストとコンテナのポートをマッピング
+          PortMappings: 
+            - ContainerPort: 3306
+              HostPort: 3306
+  
+  # TaskDefinition3:
+  #   Type: AWS::ECS::TaskDefinition
+  #   Properties:
+  #     RequiresCompatibilities:
+  #       - EC2
+  #     Cpu: 512
+  #     Memory: 512
+  #     NetworkMode: bridge
+  #     ExecutionRoleArn: !Ref FargateTaskExecutionRole
+  #     TaskRoleArn: !Ref TaskRole1
+  #     ContainerDefinitions:
+  #       - Name: tomcat1
+  #         Image: !Sub "${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/tomcat:latest"
+
+  EC2Role:
+    Type: 'AWS::IAM::Role'
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - ec2.amazonaws.com
+            Action:
+              - 'sts:AssumeRole'
+      Path: /
+      Policies:
+        - PolicyName: ecs-service
+          PolicyDocument:
+            Statement:
+              - Effect: Allow
+                Action:
+                  - 'ecs:CreateCluster'
+                  - 'ecs:DeregisterContainerInstance'
+                  - 'ecs:DiscoverPollEndpoint'
+                  - 'ecs:Poll'
+                  - 'ecs:RegisterContainerInstance'
+                  - 'ecs:StartTelemetrySession'
+                  - 'ecs:Submit*'
+                  - 'logs:CreateLogStream'
+                  - 'logs:PutLogEvents'
+                Resource: '*'
+
+  ECSRole:                                                                                      #(C)
+    Type: AWS::IAM::Role
+    Properties:
+      Path: /
+      AssumeRolePolicyDocument:
+        Statement:
+          - Action: sts:AssumeRole
+            Effect: Allow
+            Principal:
+              Service: ec2.amazonaws.com
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AmazonEC2ContainerServiceforEC2Role
+
+  IamInstanceProfile:                                                                           #(D)
+    Type: AWS::IAM::InstanceProfile
+    Properties:
+      Path: /
+      Roles:
+        - !Ref ECSRole
+
+  # AutoscalingRole:
+  #   Type: 'AWS::IAM::Role'
+  #   Properties:
+  #     AssumeRolePolicyDocument:
+  #       Statement:
+  #         - Effect: Allow
+  #           Principal:
+  #             Service:
+  #               - application-autoscaling.amazonaws.com
+  #           Action:
+  #             - 'sts:AssumeRole'
+  #     Path: /
+  #     Policies:
+  #       - PolicyName: service-autoscaling
+  #         PolicyDocument:
+  #           Statement:
+  #             - Effect: Allow
+  #               Action:
+  #                 - 'application-autoscaling:*'
+  #                 - 'cloudwatch:DescribeAlarms'
+  #                 - 'cloudwatch:PutMetricAlarm'
+  #                 - 'ecs:DescribeServices'
+  #                 - 'ecs:UpdateService'
+  #               Resource: '*'
+
+  EC2InstanceProfile:
+    Type: 'AWS::IAM::InstanceProfile'
+    Properties:
+      Path: /
+      Roles:
+        - !Ref EC2Role
+
+  # ECSAutoScalingGroup:
+  #   Type: 'AWS::AutoScaling::AutoScalingGroup'
+  #   Properties:
+  #     VPCZoneIdentifier: !Ref mySubnetAppAndDb
+  #     LaunchConfigurationName: !Ref ContainerInstances
+  #     MinSize: '1'
+  #     MaxSize: !Ref MaxSize
+  #     DesiredCapacity: !Ref DesiredCapacity
+  #   CreationPolicy:
+  #     ResourceSignal:
+  #       Timeout: PT15M
+  #   UpdatePolicy:
+  #     AutoScalingReplacingUpdate:
+  #       WillReplace: 'true'
+
+  ## DBサーバ作成時に復活させる。
+  # ECSAutoScalingGroup1: 
+  #   Type: AWS::AutoScaling::AutoScalingGroup
+  #   Properties: 
+  #     AutoScalingGroupName: testGroup1
+  #     AvailabilityZones: 
+  #       # !GetAZs ""
+  #       - ap-northeast-1a
+  #     VPCZoneIdentifier: 
+  #       - !Ref mySubnetAppAndDb
+  #     LaunchConfigurationName: !Ref ContainerInstance1
+  #     MinSize: "1"
+  #     MaxSize: "1"
+  #     DesiredCapacity: 1
+  #     TargetGroupARNs:
+  #       - !Ref TargetGroup
+
+  # ContainerInstance1:
+  #   Type: 'AWS::AutoScaling::LaunchConfiguration'
+  #   Properties:
+  #     AssociatePublicIpAddress: true
+  #     # ImageId: !Ref Ec2ImageId
+  #     ImageId: ami-0f87d679e2fccd272
+  #     SecurityGroups:
+  #       - !Ref SGPingDb
+  #     InstanceType: t2.micro
+  #     IamInstanceProfile: !Ref IamInstanceProfile
+  #     KeyName: !Ref NewKeyPair
+  #     UserData:
+  #       # Cluster上のECSインスタンスとして設定
+  #       # -xeを削除
+  #       Fn::Base64: !Sub |
+  #         #!/bin/bash
+  #         mkdir /etc/ecs
+  #         touch ecs.config
+  #         echo ECS_CLUSTER=${Cluster} >> /etc/ecs/ecs.config
+  #     InstanceType: "t2.small"
+  #     BlockDeviceMappings: 
+  #       - DeviceName: "/dev/xvda"
+  #         Ebs: 
+  #           VolumeSize: "30"
+  #           VolumeType: "gp2"
+  ##
+
+  ECSAutoScalingGroup2: 
+    Type: AWS::AutoScaling::AutoScalingGroup
+    Properties: 
+      AutoScalingGroupName: testGroup2
+      AvailabilityZones: 
+        # !GetAZs ""
+        - ap-northeast-1a
+      VPCZoneIdentifier: 
+        - !Ref mySubnetWeb
+      LaunchConfigurationName: !Ref ContainerInstance2
+      MinSize: "1"
+      MaxSize: "1"
+      DesiredCapacity: 1
+      TargetGroupARNs:
+        - !Ref TargetGroup
+
+  ContainerInstance2:
+    Type: 'AWS::AutoScaling::LaunchConfiguration'
+    Properties:
+      AssociatePublicIpAddress: true
+      # ImageId: !Ref Ec2ImageId
+      ImageId: ami-0f87d679e2fccd272
+      SecurityGroups:
+        - !Ref SGPingWeb
+      InstanceType: t2.small
+      IamInstanceProfile: !Ref IamInstanceProfile
+      KeyName: !Ref NewKeyPair
+      UserData:
+        # Cluster上のECSインスタンスとして設定
+        # -xeを削除
+        Fn::Base64: !Sub |
+          #!/bin/bash
+          mkdir /etc/ecs
+          touch ecs.config
+          echo ECS_CLUSTER=${Cluster} >> /etc/ecs/ecs.config
+      BlockDeviceMappings: 
+        - DeviceName: "/dev/xvda"
+          Ebs: 
+            VolumeSize: "30"
+            VolumeType: "gp2"
+
+  # ServiceScalingTarget:
+  #   Type: 'AWS::ApplicationAutoScaling::ScalableTarget'
+  #   # DependsOn: service
+  #   Properties:
+  #     MaxCapacity: 2
+  #     MinCapacity: 1
+  #     ResourceId: !Join 
+  #       - ''
+  #       - - service/
+  #         - !Ref Cluster
+  #         - /
+  #         - !GetAtt 
+  #           - service
+  #           - Name
+  #     RoleARN: !GetAtt 
+  #       - AutoscalingRole
+  #       - Arn
+  #     ScalableDimension: 'ecs:service:DesiredCount'
+  #     ServiceNamespace: ecs
+
+  # ServiceScalingPolicy:
+  #   Type: 'AWS::ApplicationAutoScaling::ScalingPolicy'
+  #   Properties:
+  #     PolicyName: AStepPolicy
+  #     PolicyType: StepScaling
+  #     ScalingTargetId: !Ref ServiceScalingTarget
+  #     StepScalingPolicyConfiguration:
+  #       AdjustmentType: PercentChangeInCapacity
+  #       Cooldown: 60
+  #       MetricAggregationType: Average
+  #       StepAdjustments:
+  #         - MetricIntervalLowerBound: 0
+  #           ScalingAdjustment: 200
+
+  # ServiceRole:
+  #   Type: AWS::IAM::Role
+  #   Properties:
+  #     AssumeRolePolicyDocument:
+  #       Version: 2008-10-17
+  #       Statement:
+  #         - Sid: ''
+  #           Effect: Allow
+  #           Principal:
+  #             Service: ecs.amazonaws.com
+  #           Action: 'sts:AssumeRole'
+  #     ManagedPolicyArns:
+  #       - 'arn:aws:iam::aws:policy/service-role/AmazonEC2ContainerServiceRole'
+
+  # Service1:
+  #   Type: AWS::ECS::Service
+  #   DependsOn: ECSAutoScalingGroup2
+  #   Properties:
+  #     Cluster: !Ref Cluster
+  #     LaunchType: EC2
+  #     DesiredCount: 1
+  #     TaskDefinition: !Ref TaskDefinition1
+  #     ServiceName: testService1
+      # NetworkConfiguration:
+      #   AwsvpcConfiguration:
+      #     AssignPublicIp: ENABLED
+      #     SecurityGroups:
+      #       - !Ref SGPingDb
+      #     Subnets:
+      #       - !Ref mySubnetAppAndDb
+      # Role: !Ref ServiceRole
+
+  Service2:
+    Type: AWS::ECS::Service
+    DependsOn: ECSAutoScalingGroup2
+    Properties:
+      Cluster: !Ref Cluster
+      LaunchType: EC2
+      DesiredCount: 1
+      TaskDefinition: !Ref TaskDefinition2
+      ServiceName: testService2
+      # TaskのNetworkモードがawsvpcの場合、下記設定が必要
+      # NetworkConfiguration:
+      #   AwsvpcConfiguration:
+      #     AssignPublicIp: ENABLED
+      #     SecurityGroups:
+      #       - !Ref SGPingWeb
+      #     Subnets:
+      #       - !Ref mySubnetWeb
+
+      # Role: !Ref ServiceRole
+
+  # Service3:
+  #   Type: AWS::ECS::Service
+  #   DependsOn: ECSAutoScalingGroup2
+  #   Properties:
+  #     Cluster: !Ref Cluster
+  #     LaunchType: EC2
+  #     DesiredCount: 1
+  #     TaskDefinition: !Ref TaskDefinition3
+  #     ServiceName: testService3
+      # NetworkConfiguration:
+      #   AwsvpcConfiguration:
+      #     AssignPublicIp: ENABLED
+      #     SecurityGroups:
+      #       - !Ref SGPingDb
+      #     Subnets:
+      #       - !Ref mySubnetAppAndDb
+      # Role: !Ref ServiceRole
