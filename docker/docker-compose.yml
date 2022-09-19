@@ -1,0 +1,22 @@
+##################################################
+# ■コンテナ起動コマンド
+# docker-compose up -d
+#
+# ■起動したコンテナに入るコマンド
+# docker exec -it [コンテナ名/コンテナID] /bin/bash
+#
+# ■DBに入るコマンド
+# mysql -u root -p
+# enter押下後、rootのパスワードを入力
+##################################################
+
+version: '2'
+services:
+  db:
+    build: ./db/
+    environment:
+      MYSQL_ROOT_PASSWORD: password
+      MYSQL_DATABASE: BOOK_DB
+      TZ: Asia/Tokyo
+    ports:
+      - "3306:3306"

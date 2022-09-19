@@ -47,7 +47,7 @@ dependencies {
 
     // https://mvnrepository.com/artifact/org.springframework/spring-jdbc
     implementation group: 'org.springframework', name: 'spring-jdbc', version: '5.3.20'
-    
+
     // https://mvnrepository.com/artifact/org.springframework.boot/spring-boot-starter-aop
 	implementation group: 'org.springframework.boot', name: 'spring-boot-starter-aop', version: '2.7.0'
 	
@@ -63,7 +63,6 @@ dependencies {
 	// https://mvnrepository.com/artifact/ch.qos.logback/logback-classic
 	testImplementation group: 'ch.qos.logback', name: 'logback-classic', version: '1.2.3'
 
-
 }
 
 war {
@@ -73,7 +72,7 @@ war {
 group = 'com.books'
 version = '0.0.1-SNAPSHOT'
 description = 'app'
-java.sourceCompatibility = JavaVersion.VERSION_1_8
+java.sourceCompatibility = JavaVersion.VERSION_17
 
 publishing {
     publications {
