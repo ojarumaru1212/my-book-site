@@ -3,23 +3,21 @@ AWSTemplateFormatVersion: 2010-09-09
 # テンプレートを説明する文字列（必須（必ずAWSTemplateFormatVersion直下に記載する））
 Description: Create ECR
 
-# Parameters: 
-#   KeyName:
-#     Description: The EC2 Key Pair to allow SSH access to the instance
-#     Type: "AWS::EC2::KeyPair::mySSHKey"
-
 ###############################################
 # 作成するリソースを定義
 ###############################################
 Resources:
+  # MySQLイメージを格納するリポジトリ
   DBRepository:
     Type: AWS::ECR::Repository
     Properties: 
       RepositoryName: test
+  # Apacheイメージを格納するリポジトリ
   ApacheRepository:
     Type: AWS::ECR::Repository
     Properties: 
       RepositoryName: apache
+  # Tomcatイメージを格納するリポジトリ
   TomcatRepository:
     Type: AWS::ECR::Repository
     Properties: 
