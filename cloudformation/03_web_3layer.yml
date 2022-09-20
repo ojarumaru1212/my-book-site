@@ -444,5 +444,4 @@ Resources:
       #       - !Ref SGPingWeb
       #     Subnets:
       #       - !Ref mySubnetWeb
-
       # Role: !Ref ServiceRole

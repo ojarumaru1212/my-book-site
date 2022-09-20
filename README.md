@@ -64,9 +64,9 @@ ECRの作成に関しては、後述の「AWSへのデプロイ」を参照。<b
 
 ○手順
 1. IAMユーザの作成<br>
-cloudfomationより、`01_IAM.yml`を使用しスタックを作成する。
+cloudfomationより、`./cloudformation/01_IAM.yml`を使用しスタックを作成する。
 2. ECRの作成<br>
-cloudfomationより、`02_ECR.yml`を使用しスタックを作成する。
+cloudfomationより、`./cloudformation/02_ECR.yml`を使用しスタックを作成する。
 3. ECRにdockerイメージをプッシュ<br>
 ```
 3-1. コマンドプロンプトで./app配下で以下を実行
@@ -80,7 +80,7 @@ aws configure
 ![](./pictures/AWSSecretsManager.png)
 
 4. ECS等の作成<br>
-cloudfomationより、`03_web_3layer.yml`を使用しスタックを作成する。
+cloudfomationより、`./cloudformation/03_web_3layer.yml`を使用しスタックを作成する。
 
 5. 4で作成したECSのEC2インスタンスのパブリックIPにアクセス<br>
 これでWEBサイトが表示されたら成功！
