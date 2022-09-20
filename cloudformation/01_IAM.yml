@@ -36,11 +36,3 @@ Resources:
     Properties:
       Name: !Sub ${AdminUser}-credentials
       SecretString: !Sub "{\"accessKeyId\":\"${IAMUser1AccessKey}\",\"secretAccessKey\":\"${IAMUser1AccessKey.SecretAccessKey}\"}"
-
-# Outputs:
-#   UserName:
-#     Description: UserName
-#     Value: !Join [",", [!Ref AdminUserName, !Ref PowerUserName, !Ref OpeUserName]]
-#   LoginURL:
-#     Description: LoginURL
-#     Value: !Join ["", ["https://", !Ref AWS::AccountId, ".signin.aws.amazon.com/console"]]
